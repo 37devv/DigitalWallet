@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   AppBar,
   Box,
   Card,
   CardContent,
+  CircularProgress,
   Container,
   Divider,
   IconButton,
@@ -15,25 +16,29 @@ import {
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
-import { accounts } from '../data'
+import { fetchAccount, fetchTransactions } from '../api'
 import { formatChf, bankStyles } from '../utils'
 
 export default function AccountDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [tab, setTab] = useState('ausgaben')
+  const [account, setAccount] = useState(null)
+  const [transactions, setTransactions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const account = accounts.find((a) => a.id === Number(id))
+  useEffect(() => {
+    Promise.all([fetchAccount(id), fetchTransactions(id)])
+      .then(([acc, txs]) => {
+        setAccount(acc)
+        setTransactions(txs)
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [id])
 
-  if (!account) {
-    return (
-      <Box sx={{ p: 4 }}>
-        <Typography>Konto nicht gefunden.</Typography>
-      </Box>
-    )
-  }
-
-  const filtered = account.transactions.filter((t) => t.type === tab)
+  const filtered = transactions.filter((t) => t.type === tab)
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5' }}>
@@ -52,7 +57,6 @@ export default function AccountDetail() {
           </Typography>
         </Toolbar>
 
-        {/* Tabs inside AppBar like the screenshot */}
         <Tabs
           value={tab}
           onChange={(_, v) => setTab(v)}
@@ -66,56 +70,72 @@ export default function AccountDetail() {
       </AppBar>
 
       <Container maxWidth="md" sx={{ py: 5 }}>
-        {/* Bank name & balance */}
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <Typography sx={{ mb: 1, ...bankStyles[account.logo], fontSize: '1.5rem' }}>
-            {account.bank}
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5 }}>
-            <MonetizationOnIcon sx={{ fontSize: '2.5rem', color: '#888' }} />
-            <Typography variant="h3" sx={{ fontWeight: 500, color: account.balance < 0 ? '#c0392b' : '#222' }}>
-              {formatChf(account.balance)}&nbsp;
-              <Typography component="span" variant="h5" sx={{ color: '#888', fontWeight: 400 }}>
-                CHF
-              </Typography>
-            </Typography>
+        {loading && (
+          <Box sx={{ textAlign: 'center', mt: 8 }}>
+            <CircularProgress sx={{ color: '#c0392b' }} />
           </Box>
-          <Typography variant="body1" sx={{ color: '#999', mt: 0.5 }}>
-            Valuta 15.12.2021
-          </Typography>
-        </Box>
+        )}
 
-        {/* Transaction list */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {filtered.length === 0 && (
-            <Typography sx={{ textAlign: 'center', color: '#999', mt: 4 }}>
-              Keine Transaktionen vorhanden.
-            </Typography>
-          )}
-          {filtered.map((tx) => (
-            <Card key={tx.id} variant="outlined" sx={{ borderRadius: 1, boxShadow: 'none' }}>
-              <CardContent sx={{ py: 1.5, px: 3, '&:last-child': { pb: 1.5 } }}>
-                <Typography variant="caption" sx={{ color: '#999' }}>
-                  {tx.date}
+        {error && (
+          <Typography sx={{ textAlign: 'center', color: '#c0392b', mt: 8 }}>
+            {error}
+          </Typography>
+        )}
+
+        {!loading && !error && account && (
+          <>
+            {/* Bank name & balance */}
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+              <Typography sx={{ mb: 1, ...bankStyles[account.logo], fontSize: '1.5rem' }}>
+                {account.bank}
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5 }}>
+                <MonetizationOnIcon sx={{ fontSize: '2.5rem', color: '#888' }} />
+                <Typography variant="h3" sx={{ fontWeight: 500, color: account.balance < 0 ? '#c0392b' : '#222' }}>
+                  {formatChf(account.balance)}&nbsp;
+                  <Typography component="span" variant="h5" sx={{ color: '#888', fontWeight: 400 }}>
+                    CHF
+                  </Typography>
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.5 }}>
-                  <Typography variant="body1">{tx.description}</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
-                    <Typography
-                      variant="body1"
-                      sx={{ fontWeight: 500, color: tx.amount < 0 ? '#c0392b' : '#222' }}
-                    >
-                      {formatChf(Math.abs(tx.amount))}
+              </Box>
+              <Typography variant="body1" sx={{ color: '#999', mt: 0.5 }}>
+                Valuta 15.12.2021
+              </Typography>
+            </Box>
+
+            {/* Transaction list */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {filtered.length === 0 && (
+                <Typography sx={{ textAlign: 'center', color: '#999', mt: 4 }}>
+                  Keine Transaktionen vorhanden.
+                </Typography>
+              )}
+              {filtered.map((tx) => (
+                <Card key={tx.id} variant="outlined" sx={{ borderRadius: 1, boxShadow: 'none' }}>
+                  <CardContent sx={{ py: 1.5, px: 3, '&:last-child': { pb: 1.5 } }}>
+                    <Typography variant="caption" sx={{ color: '#999' }}>
+                      {tx.date}
                     </Typography>
-                    <Typography variant="body2" sx={{ color: '#999' }}>
-                      CHF
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.5 }}>
+                      <Typography variant="body1">{tx.description}</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
+                        <Typography
+                          variant="body1"
+                          sx={{ fontWeight: 500, color: tx.amount < 0 ? '#c0392b' : '#222' }}
+                        >
+                          {formatChf(Math.abs(tx.amount))}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#999' }}>
+                          CHF
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          </>
+        )}
       </Container>
     </Box>
   )
