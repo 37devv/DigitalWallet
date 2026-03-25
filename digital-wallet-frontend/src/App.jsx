@@ -1,120 +1,113 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import {
+  AppBar,
+  Box,
+  Card,
+  CardContent,
+  Container,
+  Divider,
+  List,
+  Toolbar,
+  Typography,
+} from '@mui/material'
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
+
+const accounts = [
+  { bank: 'UBS', type: 'Privatkonto', balance: 11117.60, logo: 'UBS' },
+  { bank: 'Schaffhauser Kantonalbank', type: 'Privatkonto', balance: 6127.45, logo: 'SKB' },
+  { bank: 'Credit Suisse', type: 'Sparkonto', balance: 4000.00, logo: 'CS' },
+  { bank: 'Raiffeisen', type: 'Privatkonto', balance: -979.10, logo: 'RF' },
+  { bank: 'Raiffeisen', type: 'Sparkonto', balance: 3000.00, logo: 'RF' },
+]
+
+const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0)
+
+function formatChf(amount) {
+  const abs = Math.abs(amount).toFixed(2)
+  const [int, dec] = abs.split('.')
+  const formatted = int.replace(/\B(?=(\d{3})+(?!\d))/g, "'")
+  return `${amount < 0 ? '-' : ''}${formatted}.${dec}`
+}
+
+const bankStyles = {
+  UBS: { fontWeight: 900, fontSize: '1.1rem', letterSpacing: 1, color: '#c00' },
+  SKB: { fontWeight: 700, fontSize: '0.85rem', color: '#333' },
+  CS: { fontWeight: 700, fontSize: '0.9rem', fontStyle: 'italic', color: '#222' },
+  RF: { fontWeight: 900, fontSize: '1rem', letterSpacing: 2, color: '#222' },
+}
+
+function BankLabel({ logo, bank }) {
+  return (
+    <Typography sx={{ minWidth: 200, ...bankStyles[logo] }}>
+      {bank}
+    </Typography>
+  )
+}
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5' }}>
+      {/* Header */}
+      <AppBar position="static" sx={{ bgcolor: '#c0392b' }}>
+        <Toolbar>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Oepfelbaum
+          </Typography>
+          <Divider orientation="vertical" flexItem sx={{ mx: 2, bgcolor: 'rgba(255,255,255,0.5)' }} />
+          <Typography variant="h6" sx={{ fontWeight: 400 }}>
+            Digitales Portemonnaie
+          </Typography>
+        </Toolbar>
+      </AppBar>
 
-      <div className="ticks"></div>
+      <Container maxWidth="md" sx={{ py: 5 }}>
+        {/* Total Balance */}
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5 }}>
+            <MonetizationOnIcon sx={{ fontSize: '3rem', color: '#888' }} />
+            <Typography variant="h3" sx={{ fontWeight: 500, color: '#222' }}>
+              {formatChf(totalBalance)}&nbsp;
+              <Typography component="span" variant="h5" sx={{ color: '#888', fontWeight: 400 }}>
+                CHF
+              </Typography>
+            </Typography>
+          </Box>
+          <Typography variant="body1" sx={{ color: '#999', mt: 0.5 }}>
+            Valuta 15.12.2021
+          </Typography>
+        </Box>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        {/* Account List */}
+        <List disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          {accounts.map((account, index) => (
+            <Card
+              key={index}
+              variant="outlined"
+              sx={{ borderRadius: 1, boxShadow: 'none' }}
+            >
+              <CardContent sx={{ py: 2, px: 3, '&:last-child': { pb: 2 } }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <BankLabel logo={account.logo} bank={account.bank} />
+                  <Typography variant="body1" sx={{ color: '#999', flex: 1, px: 2 }}>
+                    {account.type}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 500, color: account.balance < 0 ? '#c0392b' : '#222' }}
+                    >
+                      {formatChf(account.balance)}
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#999' }}>
+                      CHF
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          ))}
+        </List>
+      </Container>
+    </Box>
   )
 }
 
