@@ -15,9 +15,8 @@ import {
   Typography,
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn'
 import { fetchAccount, fetchTransactions } from '../api'
-import { formatChf, bankStyles } from '../utils'
+import { formatChf, bankStyles, todayFormatted } from '../utils'
 
 export default function AccountDetail() {
   const { id } = useParams()
@@ -90,16 +89,15 @@ export default function AccountDetail() {
                 {account.bank}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5 }}>
-                <MonetizationOnIcon sx={{ fontSize: '2.5rem', color: '#888' }} />
                 <Typography variant="h3" sx={{ fontWeight: 500, color: account.balance < 0 ? '#c0392b' : '#222' }}>
                   {formatChf(account.balance)}&nbsp;
                   <Typography component="span" variant="h5" sx={{ color: '#888', fontWeight: 400 }}>
-                    CHF
+                    GBP
                   </Typography>
                 </Typography>
               </Box>
               <Typography variant="body1" sx={{ color: '#999', mt: 0.5 }}>
-                Valuta 15.12.2021
+                Valuta {todayFormatted()}
               </Typography>
             </Box>
 
@@ -126,7 +124,7 @@ export default function AccountDetail() {
                           {formatChf(Math.abs(tx.amount))}
                         </Typography>
                         <Typography variant="body2" sx={{ color: '#999' }}>
-                          CHF
+                          GBP
                         </Typography>
                       </Box>
                     </Box>

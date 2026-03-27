@@ -24,14 +24,14 @@ public class AccountController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Account> getAccountById(@PathVariable int id) {
+    public ResponseEntity<Account> getAccountById(@PathVariable String id) {
         return accountService.getAccountById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{id}/transactions")
-    public ResponseEntity<List<Transaction>> getTransactions(@PathVariable int id) {
+    public ResponseEntity<List<Transaction>> getTransactions(@PathVariable String id) {
         return accountService.getTransactionsByAccountId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
