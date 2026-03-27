@@ -85,9 +85,14 @@ export default function AccountDetail() {
           <>
             {/* Bank name & balance */}
             <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <Typography sx={{ mb: 1, ...bankStyles[account.logo], fontSize: '1.5rem' }}>
+              <Typography sx={{ mb: 0.5, ...bankStyles[account.logo], fontSize: '1.5rem' }}>
                 {account.bank}
               </Typography>
+              {account.ownerName && (
+                <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+                  {account.ownerName}
+                </Typography>
+              )}
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5 }}>
                 <Typography variant="h3" sx={{ fontWeight: 500, color: account.balance < 0 ? '#c0392b' : '#222' }}>
                   {formatChf(account.balance)}&nbsp;
@@ -119,7 +124,7 @@ export default function AccountDetail() {
                       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
                         <Typography
                           variant="body1"
-                          sx={{ fontWeight: 500, color: tx.amount < 0 ? '#c0392b' : '#222' }}
+                          sx={{ fontWeight: 500, color: '#222' }}
                         >
                           {formatChf(Math.abs(tx.amount))}
                         </Typography>

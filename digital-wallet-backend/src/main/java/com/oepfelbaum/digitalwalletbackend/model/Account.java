@@ -5,5 +5,6 @@ public record Account(
         String bank,
         String type,
         double balance,
-        String logo
+        String logo,
+        String ownerName
 ) {}

@@ -6,7 +6,6 @@ export function todayFormatted() {
 }
 
 export function formatChf(amount) {
-  // Round to 5 Rappen
   const rounded = Math.round(amount / 0.05) * 0.05
   const abs = Math.abs(rounded).toFixed(2)
   const [int, dec] = abs.split('.')

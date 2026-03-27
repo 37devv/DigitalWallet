@@ -238,7 +238,9 @@ public class NatWestService {
                     log.info("Account id={} subType={} nickname={}", a.accountId(), a.accountSubType(), a.nickname());
                     double balance = fetchBalance(token, a.accountId());
                     String type = formatAccountType(a.accountSubType());
-                    return new Account(a.accountId(), "NatWest", type, balance, "NW");
+                    String ownerName = (a.accountSchemes() != null && !a.accountSchemes().isEmpty())
+                            ? a.accountSchemes().get(0).name() : "";
+                    return new Account(a.accountId(), "NatWest", type, balance, "NW", ownerName);
                 })
                 .collect(Collectors.toList());
     }
@@ -261,11 +263,14 @@ public class NatWestService {
             balances.forEach(b -> log.info("Account {} balance type={} indicator={} amount={}",
                     accountId, b.type(), b.creditDebitIndicator(), b.amount().amount()));
 
-            // Prefer InterimAvailable, fall back to the first balance of any type
+            // Prefer ClosingBooked (matches the raw balance stored in sandbox), fall back to InterimAvailable, then first
             NatWestBalance picked = balances.stream()
-                    .filter(b -> "InterimAvailable".equals(b.type()))
+                    .filter(b -> "ClosingBooked".equals(b.type()))
                     .findFirst()
-                    .orElse(balances.get(0));
+                    .orElseGet(() -> balances.stream()
+                            .filter(b -> "InterimAvailable".equals(b.type()))
+                            .findFirst()
+                            .orElse(balances.get(0)));
 
             double amount = Double.parseDouble(picked.amount().amount());
             double signed = "Debit".equals(picked.creditDebitIndicator()) ? -amount : amount;
@@ -362,7 +367,13 @@ public class NatWestService {
     record NatWestAccount(
             @JsonProperty("AccountId") String accountId,
             @JsonProperty("AccountSubType") String accountSubType,
-            @JsonProperty("Nickname") String nickname
+            @JsonProperty("Nickname") String nickname,
+            @JsonProperty("Account") List<AccountScheme> accountSchemes
+    ) {}
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record AccountScheme(
+            @JsonProperty("Name") String name
     ) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)

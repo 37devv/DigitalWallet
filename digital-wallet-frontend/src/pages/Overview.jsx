@@ -38,6 +38,7 @@ export default function Overview() {
   }, [])
 
   const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0)
+  const ownerName = accounts.length > 0 ? accounts[0].ownerName : ''
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5' }}>
@@ -82,6 +83,13 @@ export default function Overview() {
                 Valuta {todayFormatted()}
               </Typography>
             </Box>
+
+            {/* Owner name */}
+            {ownerName && (
+              <Typography variant="body1" sx={{ color: '#666', mb: 2, textAlign: 'center' }}>
+                {ownerName}
+              </Typography>
+            )}
 
             {/* Account List */}
             <List disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
