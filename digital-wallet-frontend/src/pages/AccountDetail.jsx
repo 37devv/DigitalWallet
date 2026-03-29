@@ -16,12 +16,12 @@ import {
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { fetchAccount, fetchTransactions } from '../api'
-import { formatChf, bankStyles, todayFormatted } from '../utils'
+import { formatAmount, bankStyles, todayFormatted } from '../utils'
 
 export default function AccountDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [tab, setTab] = useState('ausgaben')
+  const [tab, setTab] = useState('debit')
   const [account, setAccount] = useState(null)
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
@@ -63,8 +63,8 @@ export default function AccountDetail() {
           centered
           TabIndicatorProps={{ style: { backgroundColor: 'white', height: 3 } }}
         >
-          <Tab label="Ausgaben" value="ausgaben" sx={{ fontWeight: tab === 'ausgaben' ? 700 : 400, opacity: 1 }} />
-          <Tab label="Einkommen" value="einkommen" sx={{ fontWeight: tab === 'einkommen' ? 700 : 400, opacity: 1 }} />
+          <Tab label="Ausgaben" value="debit" sx={{ fontWeight: tab === 'debit' ? 700 : 400, opacity: 1 }} />
+          <Tab label="Einkommen" value="credit" sx={{ fontWeight: tab === 'credit' ? 700 : 400, opacity: 1 }} />
         </Tabs>
       </AppBar>
 
@@ -95,7 +95,7 @@ export default function AccountDetail() {
               )}
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5 }}>
                 <Typography variant="h3" sx={{ fontWeight: 500, color: account.balance < 0 ? '#c0392b' : '#222' }}>
-                  {formatChf(account.balance)}&nbsp;
+                  {formatAmount(account.balance)}&nbsp;
                   <Typography component="span" variant="h5" sx={{ color: '#888', fontWeight: 400 }}>
                     GBP
                   </Typography>
@@ -126,7 +126,7 @@ export default function AccountDetail() {
                           variant="body1"
                           sx={{ fontWeight: 500, color: '#222' }}
                         >
-                          {formatChf(Math.abs(tx.amount))}
+                          {formatAmount(Math.abs(tx.amount))}
                         </Typography>
                         <Typography variant="body2" sx={{ color: '#999' }}>
                           GBP

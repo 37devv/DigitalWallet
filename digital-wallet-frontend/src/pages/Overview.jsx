@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material'
 import { fetchAccounts } from '../api'
-import { formatChf, bankStyles, todayFormatted } from '../utils'
+import { formatAmount, bankStyles, todayFormatted } from '../utils'
 
 function BankLabel({ logo, bank }) {
   return (
@@ -73,7 +73,7 @@ export default function Overview() {
             <Box sx={{ textAlign: 'center', mb: 4 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5 }}>
                 <Typography variant="h3" sx={{ fontWeight: 500, color: totalBalance < 0 ? '#c0392b' : '#222' }}>
-                  {formatChf(totalBalance)}&nbsp;
+                  {formatAmount(totalBalance)}&nbsp;
                   <Typography component="span" variant="h5" sx={{ color: '#888', fontWeight: 400 }}>
                     GBP
                   </Typography>
@@ -107,7 +107,7 @@ export default function Overview() {
                             variant="h6"
                             sx={{ fontWeight: 500, color: account.balance < 0 ? '#c0392b' : '#222' }}
                           >
-                            {formatChf(account.balance)}
+                            {formatAmount(account.balance)}
                           </Typography>
                           <Typography variant="body1" sx={{ color: '#999' }}>
                             GBP

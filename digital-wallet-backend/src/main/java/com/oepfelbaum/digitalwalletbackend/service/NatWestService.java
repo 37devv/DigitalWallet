@@ -33,15 +33,27 @@ public class NatWestService {
 
     private static final Logger log = LoggerFactory.getLogger(NatWestService.class);
 
+    // ── Constants ─────────────────────────────────────────────────────────────
+    private static final String BANK_NAME = "NatWest";
+    private static final String BANK_LOGO = "NW";
+    private static final String OAUTH_STATE = "ABC";
+    private static final String NATWEST_AUTH_MODE = "AUTO_POSTMAN";
+    private static final String CREDIT_DEBIT_INDICATOR_DEBIT = "Debit";
+    private static final String BALANCE_TYPE_CLOSING_BOOKED = "ClosingBooked";
+    private static final String BALANCE_TYPE_INTERIM_AVAILABLE = "InterimAvailable";
+    private static final String TRANSACTION_TYPE_DEBIT = "debit";
+    private static final String TRANSACTION_TYPE_CREDIT = "credit";
+
     private final NatWestProperties props;
     private final RestClient restClient;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     private volatile String cachedToken;
     private volatile Instant tokenExpiry = Instant.MIN;
 
-    public NatWestService(NatWestProperties props) {
+    public NatWestService(NatWestProperties props, ObjectMapper objectMapper) {
         this.props = props;
+        this.objectMapper = objectMapper;
         var httpClient = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.NEVER)
                 .build();
@@ -102,8 +114,12 @@ public class NatWestService {
                 }
                 """;
 
+        URI uri = UriComponentsBuilder.fromUriString(props.resourceUrl())
+                .pathSegment("account-access-consents")
+                .build().toUri();
+
         ConsentResponse response = restClient.post()
-                .uri(props.resourceUrl() + "/account-access-consents")
+                .uri(uri)
                 .header("Authorization", "Bearer " + appToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(body)
@@ -119,9 +135,9 @@ public class NatWestService {
                 .queryParam("response_type", "code id_token")
                 .queryParam("scope", "openid accounts")
                 .queryParam("redirect_uri", props.redirectUri())
-                .queryParam("state", "ABC")
+                .queryParam("state", OAUTH_STATE)
                 .queryParam("request", consentId)
-                .queryParam("authorization_mode", "AUTO_POSTMAN")
+                .queryParam("authorization_mode", NATWEST_AUTH_MODE)
                 .queryParam("authorization_username", props.psuUsername())
                 .build()
                 .encode()
@@ -226,8 +242,12 @@ public class NatWestService {
     public List<Account> getAccounts() {
         String token = getAccessToken();
 
+        URI uri = UriComponentsBuilder.fromUriString(props.resourceUrl())
+                .pathSegment("accounts")
+                .build().toUri();
+
         AccountsResponse response = restClient.get()
-                .uri(props.resourceUrl() + "/accounts")
+                .uri(uri)
                 .header("Authorization", "Bearer " + token)
                 .retrieve()
                 .body(AccountsResponse.class);
@@ -239,15 +259,19 @@ public class NatWestService {
                     String type = formatAccountType(a.accountSubType());
                     String ownerName = (a.accountSchemes() != null && !a.accountSchemes().isEmpty())
                             ? a.accountSchemes().get(0).name() : "";
-                    return new Account(a.accountId(), "NatWest", type, balance, "NW", ownerName);
+                    return new Account(a.accountId(), BANK_NAME, type, balance, BANK_LOGO, ownerName);
                 })
                 .collect(Collectors.toList());
     }
 
     private double fetchBalance(String token, String accountId) {
         try {
+            URI uri = UriComponentsBuilder.fromUriString(props.resourceUrl())
+                    .pathSegment("accounts", accountId, "balances")
+                    .build().toUri();
+
             BalancesResponse response = restClient.get()
-                    .uri(props.resourceUrl() + "/accounts/" + accountId + "/balances")
+                    .uri(uri)
                     .header("Authorization", "Bearer " + token)
                     .retrieve()
                     .body(BalancesResponse.class);
@@ -264,15 +288,15 @@ public class NatWestService {
 
             // Prefer ClosingBooked (matches the raw balance stored in sandbox), fall back to InterimAvailable, then first
             NatWestBalance picked = balances.stream()
-                    .filter(b -> "ClosingBooked".equals(b.type()))
+                    .filter(b -> BALANCE_TYPE_CLOSING_BOOKED.equals(b.type()))
                     .findFirst()
                     .orElseGet(() -> balances.stream()
-                            .filter(b -> "InterimAvailable".equals(b.type()))
+                            .filter(b -> BALANCE_TYPE_INTERIM_AVAILABLE.equals(b.type()))
                             .findFirst()
                             .orElse(balances.get(0)));
 
             double amount = Double.parseDouble(picked.amount().amount());
-            double signed = "Debit".equals(picked.creditDebitIndicator()) ? -amount : amount;
+            double signed = CREDIT_DEBIT_INDICATOR_DEBIT.equals(picked.creditDebitIndicator()) ? -amount : amount;
             return roundToFiveCents(signed);
         } catch (Exception e) {
             log.error("Failed to fetch balance for account {}: {}", accountId, e.getMessage());
@@ -286,8 +310,13 @@ public class NatWestService {
         // Only fetch the last 30 days of transactions
         String fromDate = Instant.now().minus(30, ChronoUnit.DAYS).toString();
 
+        URI uri = UriComponentsBuilder.fromUriString(props.resourceUrl())
+                .pathSegment("accounts", accountId, "transactions")
+                .queryParam("fromBookingDateTime", fromDate)
+                .build().toUri();
+
         TransactionsResponse response = restClient.get()
-                .uri(props.resourceUrl() + "/accounts/" + accountId + "/transactions?fromBookingDateTime=" + fromDate)
+                .uri(uri)
                 .header("Authorization", "Bearer " + token)
                 .retrieve()
                 .body(TransactionsResponse.class);
@@ -298,9 +327,9 @@ public class NatWestService {
         return txList.stream()
                 .map(tx -> {
                     double amount = Double.parseDouble(tx.amount().amount());
-                    boolean isDebit = "Debit".equals(tx.creditDebitIndicator());
+                    boolean isDebit = CREDIT_DEBIT_INDICATOR_DEBIT.equals(tx.creditDebitIndicator());
                     double signedAmount = roundToFiveCents(isDebit ? -amount : amount);
-                    String type = isDebit ? "ausgaben" : "einkommen";
+                    String type = isDebit ? TRANSACTION_TYPE_DEBIT : TRANSACTION_TYPE_CREDIT;
                     String date = formatDate(tx.bookingDateTime());
                     String description = tx.transactionInformation() != null ? tx.transactionInformation() : "-";
                     return new Transaction(tx.transactionId(), date, description, signedAmount, type);
@@ -311,7 +340,7 @@ public class NatWestService {
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /**
-     * Swiss 5-Rappen rounding: rounds to the nearest 0.05.
+     * Rounds to the nearest 0.05.
      * Works correctly for negative amounts (e.g. -979.10 stays -979.10).
      */
     private double roundToFiveCents(double amount) {
