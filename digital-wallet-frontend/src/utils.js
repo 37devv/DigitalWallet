@@ -6,11 +6,10 @@ export function todayFormatted() {
 }
 
 export function formatAmount(amount) {
-  const rounded = Math.round(amount / 0.05) * 0.05
-  const abs = Math.abs(rounded).toFixed(2)
+  const abs = Math.abs(amount).toFixed(2)
   const [int, dec] = abs.split('.')
   const formatted = int.replace(/\B(?=(\d{3})+(?!\d))/g, "'")
-  return `${rounded < 0 ? '-' : ''}${formatted}.${dec}`
+  return `${amount < 0 ? '-' : ''}${formatted}.${dec}`
 }
 
 export const bankStyles = {
