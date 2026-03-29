@@ -1,9 +1,8 @@
 package com.oepfelbaum.digitalwalletbackend.service;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oepfelbaum.digitalwalletbackend.config.NatWestProperties;
+import com.oepfelbaum.digitalwalletbackend.dto.*;
 import com.oepfelbaum.digitalwalletbackend.model.Account;
 import com.oepfelbaum.digitalwalletbackend.model.Transaction;
 import org.slf4j.Logger;
@@ -340,73 +339,4 @@ public class NatWestService {
         }
     }
 
-    // ── DTOs ──────────────────────────────────────────────────────────────────
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    record TokenResponse(
-            @JsonProperty("access_token") String accessToken,
-            @JsonProperty("expires_in") long expiresIn
-    ) {}
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    record ConsentResponse(@JsonProperty("Data") ConsentData data) {
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        record ConsentData(@JsonProperty("ConsentId") String consentId) {}
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    record AuthorizeResponse(String redirectUri) {}
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    record AccountsResponse(@JsonProperty("Data") AccountsData data) {
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        record AccountsData(@JsonProperty("Account") List<NatWestAccount> accounts) {}
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    record NatWestAccount(
-            @JsonProperty("AccountId") String accountId,
-            @JsonProperty("AccountSubType") String accountSubType,
-            @JsonProperty("Nickname") String nickname,
-            @JsonProperty("Account") List<AccountScheme> accountSchemes
-    ) {}
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    record AccountScheme(
-            @JsonProperty("Name") String name
-    ) {}
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    record BalancesResponse(@JsonProperty("Data") BalancesData data) {
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        record BalancesData(@JsonProperty("Balance") List<NatWestBalance> balances) {}
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    record NatWestBalance(
-            @JsonProperty("Amount") MoneyAmount amount,
-            @JsonProperty("CreditDebitIndicator") String creditDebitIndicator,
-            @JsonProperty("Type") String type
-    ) {}
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    record TransactionsResponse(@JsonProperty("Data") TransactionsData data) {
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        record TransactionsData(@JsonProperty("Transaction") List<NatWestTransaction> transactions) {}
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    record NatWestTransaction(
-            @JsonProperty("TransactionId") String transactionId,
-            @JsonProperty("Amount") MoneyAmount amount,
-            @JsonProperty("CreditDebitIndicator") String creditDebitIndicator,
-            @JsonProperty("BookingDateTime") String bookingDateTime,
-            @JsonProperty("TransactionInformation") String transactionInformation
-    ) {}
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    record MoneyAmount(
-            @JsonProperty("Amount") String amount,
-            @JsonProperty("Currency") String currency
-    ) {}
 }
