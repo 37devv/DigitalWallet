@@ -55,7 +55,9 @@ public class NatWestTokenManager {
         String appToken = getClientCredentialsToken();
         String consentId = createConsent(appToken);
         String authCode = authorizeConsent(consentId);
-        return exchangeCodeForToken(authCode);
+        TokenResponse tokenResponse = exchangeCodeForToken(authCode);
+        verifyConsentAuthorised(consentId, tokenResponse.accessToken());
+        return tokenResponse;
     }
 
     private String getClientCredentialsToken() {
@@ -104,6 +106,27 @@ public class NatWestTokenManager {
                 .body(ConsentResponse.class);
 
         return response.data().consentId();
+    }
+
+    private void verifyConsentAuthorised(String consentId, String userToken) {
+        URI uri = UriComponentsBuilder.fromUriString(props.resourceUrl())
+                .pathSegment("account-access-consents", consentId)
+                .build().toUri();
+
+        ConsentResponse response = restClient.get()
+                .uri(uri)
+                .header("Authorization", "Bearer " + userToken)
+                .retrieve()
+                .body(ConsentResponse.class);
+
+        String status = response != null && response.data() != null ? response.data().status() : null;
+        log.info("Consent {} status: {}", consentId, status);
+
+        // NatWest sandbox uses abbreviated status codes ("AUTH", "AWAU", "RJCT", "REVK")
+        // whereas the production API uses full strings ("Authorised", etc.)
+        if (!"Authorised".equals(status) && !"AUTH".equals(status)) {
+            throw new RuntimeException("Consent not authorised — status: " + status);
+        }
     }
 
     private String authorizeConsent(String consentId) {
