@@ -13,14 +13,22 @@ import {
   Typography,
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
 import { fetchAccount, fetchTransactions } from '../api'
 import { formatAmount, bankStyles, todayFormatted } from '../utils'
 import PageLayout from '../components/PageLayout'
+
+function parseDate(dateStr) {
+  const [day, month, year] = dateStr.split('.')
+  return new Date(year, month - 1, day)
+}
 
 export default function AccountDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [tab, setTab] = useState('debit')
+  const [sortOrder, setSortOrder] = useState('desc')
   const [account, setAccount] = useState(null)
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
@@ -37,6 +45,10 @@ export default function AccountDetail() {
   }, [id])
 
   const filtered = transactions.filter((t) => t.type === tab)
+  const sorted = [...filtered].sort((a, b) => {
+    const diff = parseDate(a.date) - parseDate(b.date)
+    return sortOrder === 'asc' ? diff : -diff
+  })
 
   const header = (
     <AppBar position="static" color="primary">
@@ -94,13 +106,21 @@ export default function AccountDetail() {
           </Box>
 
           {/* Transaction list */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', mb: 1 }}>
+            <IconButton size="small" onClick={() => setSortOrder((o) => o === 'asc' ? 'desc' : 'asc')}>
+              {sortOrder === 'asc' ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />}
+            </IconButton>
+            <Typography variant="caption" sx={{ color: '#999' }}>
+              {sortOrder === 'asc' ? 'Älteste zuerst' : 'Neueste zuerst'}
+            </Typography>
+          </Box>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {filtered.length === 0 && (
+            {sorted.length === 0 && (
               <Typography sx={{ textAlign: 'center', color: '#999', mt: 4 }}>
                 Keine Transaktionen vorhanden.
               </Typography>
             )}
-            {filtered.map((tx) => (
+            {sorted.map((tx) => (
               <Card key={tx.id} variant="outlined" sx={{ borderRadius: 1, boxShadow: 'none' }}>
                 <CardContent sx={{ py: 1.5, px: 3, '&:last-child': { pb: 1.5 } }}>
                   <Typography variant="caption" sx={{ color: '#999' }}>
