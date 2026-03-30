@@ -27,7 +27,6 @@ public class AccountService {
     }
 
     public Optional<List<Transaction>> getTransactionsByAccountId(String id) {
-        return getAccountById(id)
-                .map(a -> natWestService.getTransactions(id));
+        return Optional.of(natWestService.getTransactions(id));
     }
 }

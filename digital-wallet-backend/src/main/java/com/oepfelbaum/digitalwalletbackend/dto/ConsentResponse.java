@@ -7,5 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public record ConsentResponse(@JsonProperty("Data") ConsentData data) {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record ConsentData(@JsonProperty("ConsentId") String consentId) {}
+    public record ConsentData(
+            @JsonProperty("ConsentId") String consentId,
+            @JsonProperty("Status") String status
+    ) {}
 }
