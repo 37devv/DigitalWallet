@@ -123,20 +123,6 @@ Base URL: `http://localhost:8080/api`
 }
 ```
 
----
-
-## Architecture
-
-```
-Frontend (React)
-  └── api.js
-        └── GET /api/accounts
-              └── AccountController
-                    └── AccountService
-                          └── NatWestService
-                                ├── NatWestTokenManager  (OAuth2 flow + token cache)
-                                └── NatWestMapper        (DTO → domain model)
-```
 
 ### Key Backend Components
 
